@@ -1,0 +1,13 @@
+{% extends 'layout.twig' %}
+
+{% block body %}
+  <h1>{{title}}</h1>
+  <form action="/convert/pdf" method="post" enctype="multipart/form-data">
+    <div>
+      <input type="file" name="file" id="fileId" required>
+    </div>
+    <div>
+      <button type="submit">Convert to PDF</button>
+    </div>
+  </form>
+{% endblock %}
