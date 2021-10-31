@@ -1,15 +1,18 @@
-FROM node:16-alpine3.11 as base
+FROM node:16-alpine3.11
 
-WORKDIR /
-COPY package*.json /
-EXPOSE 3000
+RUN mkdir -p /home/node/app/node_modules && chown -R node:node /home/node/app
 
-FROM base as production
-ENV NODE_ENV=production
+WORKDIR /home/node/app
+COPY package*.json ./
 
-ADD setup.sh /
-RUN chmod +x /setup.sh
+COPY setup.sh ./
+RUN chmod +x setup.sh
+
+USER node
 
 RUN npm ci
-COPY . /
-RUN npm start
+
+COPY . .
+
+EXPOSE 3000
+CMD [ "npm", "start" ]
