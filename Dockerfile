@@ -1,6 +1,6 @@
 FROM node:16-alpine3.11 as base
 
-WORKDIR /src
+WORKDIR /
 COPY package*.json /
 EXPOSE 3000
 
