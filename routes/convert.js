@@ -12,7 +12,7 @@ const FILE_PATH = 'public/data/uploads';
 let fileName;
 let originalFileName;
 
-function fileNameNormalizer(filename) {
+const fileNameNormalizer = (filename) => {
 
     if (!filename) {
         return;
@@ -25,15 +25,7 @@ function fileNameNormalizer(filename) {
     return originalFileName + '-' + (new Date()).toISOString() + originalFileExt[0];
 }
 
-
-/* POST pdf for conversion to word. */
-router.post('/word',
-    function (req, res, next) {
-        res.send('respond with a resource');
-    });
-
-
-const wordStorage = multer.diskStorage({
+const fileStorage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, FILE_PATH)
     },
@@ -60,43 +52,91 @@ const wordFilter = (req, file, cb) => {
     }
 }
 
+const pdfFilter = (req, file, cb) => {
+    if (['application/pdf']
+        .includes(file.mimetype)) {
+        cb(null, true)
+    } else {
+        cb(null, false)
+    }
+}
 
-const wordBin = multer({storage: wordStorage, fileFilter: wordFilter})
+const pdfBin = multer({storage: fileStorage, fileFilter: pdfFilter})
 
-/* POST word for conversion to pdf. */
-router.post('/pdf', wordBin.single('file'), (req, res) => {
+/* POST pdf for conversion to word. */
+router.post('/word',
+    pdfBin.single('file'),
+    (req, res, next) => {
 
-    if (req.file) {
+        if (req.file) {
 
-        const localFilePath = FILE_PATH + '/' + fileName;
-        const outputFile = FILE_PATH + '/' + originalFileName + '.pdf';
+            const localFilePath = FILE_PATH + '/' + fileName;
+            const outputFile = FILE_PATH + '/' + originalFileName + '.doc';
 
-        const file = fs.readFileSync(localFilePath);
+            const file = fs.readFileSync(localFilePath);
 
-        libre.convert(file, ".pdf", undefined, (err, done) => {
-            if (err) {
-                fs.unlinkSync(localFilePath);
-                fs.unlinkSync(outputFile);
-
-                res.status(500).send("Error: file conversion fail");
-            }
-
-            fs.writeFileSync(outputFile, done);
-
-            res.download(outputFile, (err) => {
+            libre.convert(file, ".doc", undefined, (err, done) => {
                 if (err) {
                     fs.unlinkSync(localFilePath);
                     fs.unlinkSync(outputFile);
 
-                    res.status(500).send("Error: file download fail");
+                    res.status(500).send("Error: file conversion fail");
                 }
 
-                fs.unlinkSync(localFilePath);
-                fs.unlinkSync(outputFile);
-            })
-        })
-    }
-})
+                fs.writeFileSync(outputFile, done);
 
+                res.download(outputFile, (err) => {
+                    if (err) {
+                        fs.unlinkSync(localFilePath);
+                        fs.unlinkSync(outputFile);
+
+                        res.status(500).send("Error: file download fail");
+                    }
+
+                    fs.unlinkSync(localFilePath);
+                    fs.unlinkSync(outputFile);
+                })
+            })
+        }
+    });
+
+const wordBin = multer({storage: fileStorage, fileFilter: wordFilter})
+
+/* POST word for conversion to pdf. */
+router.post('/pdf',
+    wordBin.single('file'),
+    (req, res) => {
+
+        if (req.file) {
+
+            const localFilePath = FILE_PATH + '/' + fileName;
+            const outputFile = FILE_PATH + '/' + originalFileName + '.pdf';
+
+            const file = fs.readFileSync(localFilePath);
+
+            libre.convert(file, ".pdf", undefined, (err, done) => {
+                if (err) {
+                    fs.unlinkSync(localFilePath);
+                    fs.unlinkSync(outputFile);
+
+                    res.status(500).send("Error: file conversion fail");
+                }
+
+                fs.writeFileSync(outputFile, done);
+
+                res.download(outputFile, (err) => {
+                    if (err) {
+                        fs.unlinkSync(localFilePath);
+                        fs.unlinkSync(outputFile);
+
+                        res.status(500).send("Error: file download fail");
+                    }
+
+                    fs.unlinkSync(localFilePath);
+                    fs.unlinkSync(outputFile);
+                })
+            })
+        }
+    });
 
 module.exports = router;
