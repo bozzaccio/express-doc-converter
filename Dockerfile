@@ -6,13 +6,13 @@ RUN mkdir -p /home/node/app/node_modules && chown -R node:node /home/node/app
 WORKDIR /home/node/app
 COPY package*.json ./
 
-# add libreoffice package as a OS dependency
+# add libreoffice package as an OS dependency
 RUN apk update
 RUN apk add libreoffice
 
 RUN npm ci
 
-# permission set up for upload/download container files
+# permission setup for upload/download container files
 COPY . .
 RUN chmod 777 -R public/data/uploads
 
